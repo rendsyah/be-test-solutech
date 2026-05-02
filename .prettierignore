@@ -1,0 +1,3 @@
+# ignore artifacts
+.next
+node_modules    

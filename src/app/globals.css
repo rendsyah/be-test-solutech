@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+:root {
+  --navbar-height: 73px;
+}
+
+@theme {
+  --color-primary: #7688c9;
+  --color-primary-hover: #5f72b8;
+
+  --color-secondary: #eff1f4;
+  --color-secondary-hover: #e2e8f0;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-700 font-normal;
+  }
+
+  button {
+    @apply outline-none focus-visible:outline-hidden focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+}
+
+@utility input {
+  @apply w-full appearance-none rounded-lg border border-slate-200 py-2.75 px-4 text-sm shadow-xs placeholder:text-gray-400 focus:outline-hidden focus:border-primary focus:ring-3 focus:ring-primary/10;
+}
+
+@utility input-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-3 focus:ring-red-500/10;
+}
+
+@utility input-text-error {
+  @apply text-red-500 text-xs;
+}
+
+@utility card {
+  @apply bg-white border border-slate-200 shadow-xs rounded-2xl;
+}
+
+@utility no-scrollbar {
+  /* Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    @apply size-1.5;
+  }
+
+  &::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+}
+
+/* animation */
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* third-party libraries CSS */
+
+.apexcharts-legend-text {
+  @apply !text-gray-400;
+}
+
+.apexcharts-tooltip.apexcharts-theme-light {
+  @apply gap-1 !rounded-lg !border-slate-200 p-3 backdrop-blur-xs !bg-white/60 !shadow-xs;
+}
+
+.apexcharts-legend-text {
+  @apply pl-5! !text-gray-400;
+}
+
+.apexcharts-tooltip-series-group {
+  @apply !p-0;
+}
+
+.apexcharts-tooltip-y-group {
+  @apply !p-0;
+}
+
+.apexcharts-tooltip-title {
+  @apply !mb-0 !border-b-0 !bg-transparent !p-0 !text-[10px] !leading-4;
+}
+
+.apexcharts-tooltip-text {
+  @apply !text-xs;
+}
+
+.apexcharts-tooltip-text-y-value {
+  @apply !font-medium;
+}
+
+.apexcharts-gridline {
+  @apply !stroke-slate-200;
+}

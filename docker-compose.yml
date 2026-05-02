@@ -1,0 +1,20 @@
+services:
+  nextjs-app:
+    container_name: nextjs-app-container
+    image: ${REGISTRY_HOST}/nextjs-app:${IMAGE_TAG:-v1.0.0}
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${APP_PORT}:${APP_PORT}
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: ${APP_PORT}
+      TZ: Asia/Jakarta
+    networks:
+      - shared-networks
+
+networks:
+  shared-networks:
+    name: shared-networks
+    external: true

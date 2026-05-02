@@ -1,0 +1,39 @@
+name: Restart - NextJS APP
+on:
+  workflow_dispatch:
+
+jobs:
+  restart:
+    name: Restart - NextJS APP
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Notify Restart Started
+        continue-on-error: true
+        uses: rendsyah/.github/.github/actions/notify@main
+        with:
+          channel: 'telegram'
+          status: 'STARTED'
+          notify_url: ${{ vars.NOTIFY_URL }}
+          remarks: 'Restarting'
+
+      - name: Execute Restart
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/projects/nextjs-app
+            make restart
+
+      - name: Notify Restart Result
+        if: always()
+        continue-on-error: true
+        uses: rendsyah/.github/.github/actions/notify@main
+        with:
+          channel: 'telegram'
+          status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
+          notify_url: ${{ vars.NOTIFY_URL }}
+          remarks: ${{ job.status == 'success' && 'Restart success' || 'Restart failed' }}

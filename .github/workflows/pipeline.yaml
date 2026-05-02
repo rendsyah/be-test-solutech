@@ -1,0 +1,144 @@
+name: Pipeline - NextJS APP
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: nextjs-app-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  ci:
+    name: CI - NextJS APP
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm lint
+      - run: pnpm build
+
+      - name: Notify CI Failed
+        if: failure()
+        uses: rendsyah/.github/.github/actions/notify@main
+        with:
+          channel: 'telegram'
+          status: 'FAILED'
+          notify_url: ${{ vars.NOTIFY_URL }}
+          remarks: 'CI failed'
+
+  publish:
+    name: Publish - NextJS APP
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ secrets.REGISTRY_HOST }}/nextjs-app:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Notify Publish Failed
+        if: failure()
+        uses: rendsyah/.github/.github/actions/notify@main
+        with:
+          channel: 'telegram'
+          status: 'FAILED'
+          notify_url: ${{ vars.NOTIFY_URL }}
+          remarks: 'Publish failed'
+
+  cd:
+    name: CD - NextJS APP
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Notify Deployment Started
+        continue-on-error: true
+        uses: rendsyah/.github/.github/actions/notify@main
+        with:
+          channel: 'telegram'
+          status: 'STARTED'
+          notify_url: ${{ vars.NOTIFY_URL }}
+          remarks: 'Deploying ${{ github.ref_name }}'
+
+      - name: Execute Deployment to Server
+        uses: appleboy/ssh-action@v1
+        env:
+          REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          envs: REGISTRY_HOST, REGISTRY_USER, REGISTRY_PASSWORD, IMAGE_TAG
+          script: |
+            set -euo pipefail
+            cd /opt/projects/nextjs-app
+            make deploy
+
+      - name: Execute Health Check
+        uses: nick-invision/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 1
+          retry_wait_seconds: 10
+          command: curl -fsS --max-time 5 -o /dev/null "${{ vars.HEALTH_URL }}"
+
+      - name: Notify Deployment Result
+        if: always()
+        continue-on-error: true
+        uses: rendsyah/.github/.github/actions/notify@main
+        with:
+          channel: 'telegram'
+          status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
+          notify_url: ${{ vars.NOTIFY_URL }}
+          remarks: ${{ job.status == 'success' && 'Deployment success' || 'Deployment failed' }}
+
+  release:
+    name: Release - NextJS APP
+    needs: cd
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
