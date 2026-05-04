@@ -15,7 +15,7 @@ jobs:
           channel: 'telegram'
           status: 'STARTED'
           notify_url: ${{ vars.NOTIFY_URL }}
-          remarks: 'Restarting'
+          remarks: 'Restart started (Service)'
 
       - name: Execute Restart
         uses: appleboy/ssh-action@v1
@@ -36,4 +36,4 @@ jobs:
           channel: 'telegram'
           status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
           notify_url: ${{ vars.NOTIFY_URL }}
-          remarks: ${{ job.status == 'success' && 'Restart success' || 'Restart failed' }}
+          remarks: ${{ job.status == 'success' && 'Restart success (Service)' || 'Restart failed (Service)' }}

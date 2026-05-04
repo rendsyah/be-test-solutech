@@ -42,7 +42,7 @@ jobs:
           channel: 'telegram'
           status: 'FAILED'
           notify_url: ${{ vars.NOTIFY_URL }}
-          remarks: 'CI failed'
+          remarks: 'Build failed (CI)'
 
   publish:
     name: Publish - NextJS APP
@@ -73,7 +73,7 @@ jobs:
           channel: 'telegram'
           status: 'FAILED'
           notify_url: ${{ vars.NOTIFY_URL }}
-          remarks: 'Publish failed'
+          remarks: 'Build failed (Publish)'
 
   cd:
     name: CD - NextJS APP
@@ -89,7 +89,7 @@ jobs:
           channel: 'telegram'
           status: 'STARTED'
           notify_url: ${{ vars.NOTIFY_URL }}
-          remarks: 'Deploying ${{ github.ref_name }}'
+          remarks: 'Build started (CD - ${{ github.ref_name }})'
 
       - name: Execute Deployment to Server
         uses: appleboy/ssh-action@v1
@@ -124,7 +124,7 @@ jobs:
           channel: 'telegram'
           status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
           notify_url: ${{ vars.NOTIFY_URL }}
-          remarks: ${{ job.status == 'success' && 'Deployment success' || 'Deployment failed' }}
+          remarks: ${{ job.status == 'success' && 'Build success (CD)' || 'Build failed (CD)' }}
 
   release:
     name: Release - NextJS APP
