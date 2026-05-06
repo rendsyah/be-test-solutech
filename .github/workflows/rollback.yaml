@@ -24,7 +24,7 @@ jobs:
       - name: Notify Rollback Started
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: 'STARTED'
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: 'Rollback started (${{ inputs.target_version }})'
@@ -58,7 +58,7 @@ jobs:
         if: always()
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: ${{ job.status == 'success' && 'Rollback success (${{ inputs.target_version }})' || 'Rollback failed (${{ inputs.target_version }})' }}

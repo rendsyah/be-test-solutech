@@ -12,7 +12,7 @@ jobs:
         continue-on-error: true
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: 'STARTED'
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: 'Restart started (Service)'
@@ -33,7 +33,7 @@ jobs:
         continue-on-error: true
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: ${{ job.status == 'success' && 'Restart success (Service)' || 'Restart failed (Service)' }}

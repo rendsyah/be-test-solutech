@@ -39,7 +39,7 @@ jobs:
         if: failure()
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: 'FAILED'
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: 'Build failed (CI)'
@@ -70,7 +70,7 @@ jobs:
         if: failure()
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: 'FAILED'
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: 'Build failed (Publish)'
@@ -86,7 +86,7 @@ jobs:
         continue-on-error: true
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: 'STARTED'
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: 'Build started (CD - ${{ github.ref_name }})'
@@ -121,7 +121,7 @@ jobs:
         continue-on-error: true
         uses: rendsyah/.github/.github/actions/notify@main
         with:
-          channel: 'telegram'
+          channels: '["telegram"]'
           status: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
           notify_url: ${{ vars.NOTIFY_URL }}
           remarks: ${{ job.status == 'success' && 'Build success (CD)' || 'Build failed (CD)' }}
