@@ -15,7 +15,7 @@ deploy:
 	@echo "Deploying containers..."
 	@IMAGE_TAG=$(IMAGE_TAG) REGISTRY_HOST=$(REGISTRY_HOST) docker compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) up -d --force-recreate --no-build
 	@echo "Cleaning up unused images..."
-	@docker image prune -f
+	@docker image prune -af
 	@echo "Logging out from registry..."
 	@docker logout $(REGISTRY_HOST)
 	@echo "Deployment complete!"
