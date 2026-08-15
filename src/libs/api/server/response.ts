@@ -1,7 +1,5 @@
-import { randomUUID } from 'crypto';
-
 import { HTTP_STATUS } from '@/libs/constants';
-import type { ApiResponse } from '@/types';
+import type { ApiError, ApiResponse } from '@/types';
 
 export const successResponse = <T>(
   data: T,
@@ -13,18 +11,16 @@ export const successResponse = <T>(
   message,
   data,
   errors: [],
-  trace_id: randomUUID(),
 });
 
 export const errorResponse = (
   status: number,
   message: string,
-  errors: unknown[] = [],
+  errors: ApiError[] = [],
 ): ApiResponse<null> => ({
   status,
   success: false,
   message,
   data: null,
   errors,
-  trace_id: randomUUID(),
 });
