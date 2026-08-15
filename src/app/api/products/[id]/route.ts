@@ -2,12 +2,12 @@ import type { NextRequest } from 'next/server';
 
 import { successResponse, withApiHandler } from '@/libs/api/server';
 import { requireAuth } from '@/libs/auth';
-import { productService } from '@/modules/product/services/server';
-import { productUpdateSchema } from '@/modules/product/validations';
+import { productService } from '@/services';
+import { productUpdateSchema } from '@/validations';
 
 type Params = { params: Promise<{ id: string }> };
 
-export const GET = withApiHandler<NextRequest, Params>(async (_request, { params }) => {
+export const GET = withApiHandler<NextRequest, Params>(async (request, { params }) => {
   await requireAuth();
   const { id } = await params;
   const data = await productService.getById(id);
@@ -23,7 +23,7 @@ export const PATCH = withApiHandler<NextRequest, Params>(async (request, { param
   return successResponse(data, 'Product updated successfully');
 });
 
-export const DELETE = withApiHandler<NextRequest, Params>(async (_request, { params }) => {
+export const DELETE = withApiHandler<NextRequest, Params>(async (request, { params }) => {
   await requireAuth();
   const { id } = await params;
   await productService.softDelete(id);

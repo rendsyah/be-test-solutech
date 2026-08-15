@@ -2,8 +2,8 @@ import type { NextRequest } from 'next/server';
 
 import { successResponse, withApiHandler } from '@/libs/api/server';
 import { requireAuth } from '@/libs/auth';
-import { orderService } from '@/modules/order/services/server';
-import { orderCreateSchema, orderQuerySchema } from '@/modules/order/validations';
+import { orderService } from '@/services';
+import { orderCreateSchema, orderQuerySchema } from '@/validations';
 
 export const POST = withApiHandler(async (request: NextRequest) => {
   const authUser = await requireAuth();

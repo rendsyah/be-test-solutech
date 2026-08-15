@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 
 import { successResponse, withApiHandler } from '@/libs/api/server';
 import { requireAuth } from '@/libs/auth';
-import { orderService } from '@/modules/order/services/server';
+import { orderService } from '@/services';
 
 type Params = { params: Promise<{ id: string }> };
 

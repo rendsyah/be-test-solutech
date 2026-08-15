@@ -2,17 +2,22 @@ import type { NextRequest } from 'next/server';
 
 import { successResponse, withApiHandler } from '@/libs/api/server';
 import { requireAuth } from '@/libs/auth';
-import { productService } from '@/modules/product/services/server';
-import { productCreateSchema, productQuerySchema } from '@/modules/product/validations';
+import { toOptionalString } from '@/libs/utils';
+import { productService } from '@/services';
+import { productCreateSchema, productQuerySchema } from '@/validations';
 
 export const GET = withApiHandler(async (request: NextRequest) => {
   await requireAuth();
 
   const searchParams = request.nextUrl.searchParams;
+
   const parsed = productQuerySchema.parse({
     page: searchParams.get('page') ?? undefined,
     limit: searchParams.get('limit') ?? undefined,
-    search: searchParams.get('search') ?? undefined,
+    search: toOptionalString(searchParams.get('search')),
+    startDate: toOptionalString(searchParams.get('startDate')),
+    endDate: toOptionalString(searchParams.get('endDate')),
+    status: toOptionalString(searchParams.get('status')),
   });
 
   const data = await productService.getList(parsed);
