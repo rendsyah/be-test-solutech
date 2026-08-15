@@ -22,6 +22,14 @@ export class AppError extends Error {
     return new AppError(HTTP_STATUS.FORBIDDEN, message);
   }
 
+  static notFound(message: string = 'Not found') {
+    return new AppError(HTTP_STATUS.NOT_FOUND, message);
+  }
+
+  static conflict(message: string = 'Conflict') {
+    return new AppError(HTTP_STATUS.CONFLICT, message);
+  }
+
   static internal(message: string = 'An unexpected error occurred') {
     return new AppError(HTTP_STATUS.INTERNAL_SERVER_ERROR, message);
   }
