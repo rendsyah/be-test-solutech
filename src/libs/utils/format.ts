@@ -1,12 +1,3 @@
-export const formatCapitalizeWords = (str: string): string => {
-  return str
-    .toLowerCase()
-    .trim()
-    .split(/\s+/)
-    .map((word) => word[0]?.toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
 export const formatNumber = (num: number): string => {
   return num.toLocaleString();
 };
