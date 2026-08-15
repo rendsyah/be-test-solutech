@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 
-import { PlusIcon, SearchIcon, SettingIcon, UserIcon } from '@/components/icons';
+import { PlusIcon, SearchIcon } from '@/components/icons';
 import { useResource } from '@/contexts';
 import { useBodyScrollLock } from '@/hooks';
 import { cn } from '@/libs/utils';
@@ -27,7 +27,7 @@ type FlattenedMenu = {
 export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => {
   useBodyScrollLock(isOpen);
 
-  const { menus, hasPermission } = useResource();
+  const { menus } = useResource();
   const [search, setSearch] = useState('');
 
   const router = useRouter();
@@ -56,54 +56,19 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => 
     return result;
   }, [menus]);
 
-  const actions = useMemo(() => {
-    const list = [
-      {
-        id: 'create-user',
-        name: 'Create New User',
-        path: '/settings/setup-users/new',
-        icon: <PlusIcon className="size-5" />,
-        permission: ['user.create'],
-      },
-      {
-        id: 'create-role',
-        name: 'Create New Role',
-        path: '/settings/setup-roles/new',
-        icon: <PlusIcon className="size-5" />,
-        permission: ['role.create'],
-      },
-      {
-        id: 'create-permission',
-        name: 'Create New Permission',
-        path: '/settings/setup-permissions/new',
-        icon: <PlusIcon className="size-5" />,
-        permission: ['permission.create'],
-      },
-    ];
-
-    return list.filter((item) => hasPermission(item.permission));
-  }, [hasPermission]);
-
   const accounts = useMemo(
     () => [
       {
-        id: 'profile',
-        name: 'Profile Settings',
-        path: '/account',
-        icon: <UserIcon className="size-5" />,
-      },
-      {
-        id: 'change-password',
-        name: 'Change Password',
-        path: '/change-password',
-        icon: <SettingIcon className="size-5" />,
+        id: 'products',
+        name: 'Products',
+        path: '/products',
+        icon: <PlusIcon className="size-5" />,
       },
     ],
     [],
   );
 
   const visibleMenus = search ? flattenedMenus : flattenedMenus.slice(0, 5);
-  const visibleActions = search ? actions : actions.slice(0, 5);
 
   const onSelect = useCallback(
     (path: string) => {
@@ -192,26 +157,7 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => 
             </Command.Group>
           )}
 
-          {actions.length > 0 && (
-            <Command.Group heading="Actions" className={groupClass}>
-              <div className="mt-2">
-                {visibleActions.map((action) => (
-                  <Command.Item
-                    key={action.id}
-                    value={action.name}
-                    onSelect={() => onSelect(action.path)}
-                    className={itemClass}
-                  >
-                    <div className={iconClass}>{action.icon}</div>
-                    <span>{action.name}</span>
-                    <span className={badgeClass}>Action</span>
-                  </Command.Item>
-                ))}
-              </div>
-            </Command.Group>
-          )}
-
-          <Command.Group heading="Account" className={groupClass}>
+          <Command.Group heading="Quick" className={groupClass}>
             <div className="mt-2">
               {accounts.map((account) => (
                 <Command.Item
@@ -222,7 +168,7 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => 
                 >
                   <div className={iconClass}>{account.icon}</div>
                   <span>{account.name}</span>
-                  <span className={badgeClass}>Account</span>
+                  <span className={badgeClass}>Menu</span>
                 </Command.Item>
               ))}
             </div>

@@ -1,9 +1,17 @@
-import { LockClosedIcon, SettingIcon, Square2x2Icon } from '@/components/icons';
+import {
+  LockClosedIcon,
+  SettingIcon,
+  ShoppingCartIcon,
+  Square2StackIcon,
+  Square2x2Icon,
+} from '@/components/icons';
 
 type IconComponent = React.FC<{ className?: string }>;
 
 const ICON_MAP: Record<string, IconComponent> = {
   Dashboard: Square2x2Icon,
+  Product: Square2StackIcon,
+  Order: ShoppingCartIcon,
   Settings: SettingIcon,
   Security: LockClosedIcon,
 };

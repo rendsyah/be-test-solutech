@@ -9,6 +9,10 @@ export const productCreateSchema = z.object({
 
 export const productUpdateSchema = productCreateSchema.partial();
 
+export const productFormSchema = productCreateSchema.extend({
+  id: z.string().optional(),
+});
+
 export const productQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
@@ -17,4 +21,5 @@ export const productQuerySchema = z.object({
 
 export type ProductCreateDto = z.infer<typeof productCreateSchema>;
 export type ProductUpdateDto = z.infer<typeof productUpdateSchema>;
+export type ProductFormDto = z.infer<typeof productFormSchema>;
 export type ProductQueryDto = z.infer<typeof productQuerySchema>;

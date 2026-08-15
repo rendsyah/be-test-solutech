@@ -1,16 +1,12 @@
 import { useState } from 'react';
 
-import { LockClosedIcon, UserIcon, LogoutIcon } from '@/components/icons';
+import { LogoutIcon } from '@/components/icons';
 import { Avatar, PopoverContent, PopoverItem, PopoverRoot, PopoverTrigger } from '@/components/ui';
 import { useResource } from '@/contexts';
 
 export const NavbarUser: React.FC = () => {
   const { user, onLogout } = useResource();
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
 
   return (
     <PopoverRoot open={isOpen} onOpenChange={setIsOpen}>
@@ -31,25 +27,7 @@ export const NavbarUser: React.FC = () => {
           <span className="block text-md">{user.name}</span>
           <span className="mt-0.5 block text-xs text-gray-400">{user.email}</span>
         </div>
-        <PopoverItem
-          tag="a"
-          href="/account"
-          className="flex items-center gap-3 text-sm"
-          onClick={handleClose}
-        >
-          <UserIcon className="size-5" />
-          Account Setting
-        </PopoverItem>
-        <PopoverItem
-          tag="a"
-          href="/change-password"
-          className="flex items-center gap-3 text-sm"
-          onClick={handleClose}
-        >
-          <LockClosedIcon className="size-5" />
-          Change Password
-        </PopoverItem>
-        <PopoverItem className="flex items-center gap-3 text-sm" onClick={onLogout}>
+        <PopoverItem className="flex items-center gap-3 text-sm" onClick={onLogout} tag="button">
           <LogoutIcon className="size-5" />
           Sign Out
         </PopoverItem>

@@ -1,8 +1,7 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { InfoCircleIcon, LogoutIcon } from '@/components/icons';
+import { LogoutIcon } from '@/components/icons';
 import { useResource } from '@/contexts';
 import { useSidebar } from '@/contexts';
 import { cn } from '@/libs/utils';
@@ -52,17 +51,6 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <div className="mt-auto border-t border-slate-200 py-4 font-medium shrink-0 flex flex-col gap-1">
-        <Link
-          href="/help"
-          className={cn(
-            'flex items-center gap-4 px-3 py-2.5 text-sm rounded-lg transition-colors group',
-            'hover:text-primary hover:bg-primary/10',
-            'outline-none focus-visible:ring-2 focus-visible:ring-primary ',
-          )}
-        >
-          <InfoCircleIcon className="size-5 group-hover:text-primary" />
-          <span>Help & Support</span>
-        </Link>
         <button
           className={cn(
             'flex items-center gap-4 px-3 py-2.5 text-sm rounded-lg transition-colors group',
