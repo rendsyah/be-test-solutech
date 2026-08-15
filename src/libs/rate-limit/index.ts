@@ -1,42 +1,40 @@
-type SlidingWindowEntry = {
-  count: number;
-  resetAt: number;
-};
+import { redisCache } from '@/libs/cache';
 
-export class RateLimiter {
-  private store = new Map<string, SlidingWindowEntry>();
+import { MemoryRateLimiter } from './memory';
+import { RedisRateLimiter } from './redis';
+import type { RateLimiter, RateLimitOptions } from './types';
 
-  constructor(
-    private readonly windowMs: number,
-    private readonly max: number,
-  ) {}
+export class AdaptiveRateLimiter implements RateLimiter {
+  private memory: MemoryRateLimiter;
+  private redis: RedisRateLimiter;
 
-  private getEntry(key: string): SlidingWindowEntry {
-    const now = Date.now();
-    const entry = this.store.get(key);
-    if (!entry || entry.resetAt <= now) {
-      const fresh: SlidingWindowEntry = { count: 0, resetAt: now + this.windowMs };
-      this.store.set(key, fresh);
-      return fresh;
-    }
-    return entry;
+  constructor(options: RateLimitOptions) {
+    this.memory = new MemoryRateLimiter(options.windowMs, options.max);
+    this.redis = new RedisRateLimiter(options.prefix, options.windowMs, options.max);
   }
 
-  check(key: string): boolean {
-    const entry = this.getEntry(key);
-    if (entry.count >= this.max) return false;
-    entry.count += 1;
-    return true;
+  private async getStore(): Promise<RateLimiter> {
+    const client = await redisCache.getRedisClient();
+    if (client) return this.redis;
+    return this.memory;
   }
 
-  remaining(key: string): number {
-    const entry = this.getEntry(key);
-    return Math.max(0, this.max - entry.count);
+  async check(key: string): Promise<boolean> {
+    const store = await this.getStore();
+    return store.check(key);
   }
 
-  reset(key: string): void {
-    this.store.delete(key);
+  async remaining(key: string): Promise<number> {
+    const store = await this.getStore();
+    return store.remaining(key);
+  }
+
+  async reset(key: string): Promise<void> {
+    const store = await this.getStore();
+    return store.reset(key);
   }
 }
 
-export const loginRateLimiter = new RateLimiter(15 * 60 * 1000, 5);
+export const createRateLimiter = (options: RateLimitOptions): RateLimiter => {
+  return new AdaptiveRateLimiter(options);
+};

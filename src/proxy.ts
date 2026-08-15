@@ -4,48 +4,48 @@ import type { NextRequest } from 'next/server';
 import { APP } from './libs/constants';
 import { getSession } from './libs/session';
 
-// 1. Specify public routes
 const publicRoutes = ['/login'];
 
-// This function can be marked `async` if using `await` inside
-export async function proxy(request: NextRequest) {
-  // 2. Check if the current route is protected or public
-  const path = request.nextUrl.pathname;
-  const isPublicRoute = publicRoutes.includes(path);
+const DEFAULT_AUTH_REDIRECT = '/products';
 
-  // 3. Get the session from the cookie
+export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
   const session = await getSession();
 
-  // 4. Redirect to /login if the user is not authenticated
+  // Root route: redirect based on auth state in a single hop
+  if (path === '/') {
+    if (!session.token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return NextResponse.redirect(new URL(DEFAULT_AUTH_REDIRECT, request.url));
+  }
+
+  const isPublicRoute = publicRoutes.includes(path);
+
+  // Redirect unauthenticated users away from protected routes
   if (!isPublicRoute && !session.token) {
     const url = new URL('/login', request.url);
     url.searchParams.set('callbackUrl', path);
     return NextResponse.redirect(url);
   }
 
-  // 5. Redirect to /dashboard if the user is authenticated
+  // Redirect authenticated users away from public routes
   if (isPublicRoute && session.token) {
-    // Check if the session is expired
     const isSessionExpired = request.nextUrl.searchParams.get('session_expired') === 'true';
 
-    // Redirect to /login with session expired flag if the session is expired
     if (isSessionExpired) {
       const cleanUrl = new URL('/login', request.url);
       const response = NextResponse.redirect(cleanUrl);
       response.cookies.delete(APP.SESSION_NAME);
-
       return response;
     }
 
-    const redirect = session.redirectTo || '/dashboard';
+    const redirect = session.redirectTo || DEFAULT_AUTH_REDIRECT;
     return NextResponse.redirect(new URL(redirect, request.url));
   }
 
   return NextResponse.next();
 }
-
-// Alternatively, you can use a default export:
-// export default function proxy(request: NextRequest) { ... }
 
 export const config = {
   matcher: [

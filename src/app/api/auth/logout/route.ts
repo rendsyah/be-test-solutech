@@ -1,6 +1,7 @@
+import { successResponse, withApiHandler } from '@/libs/api/server';
 import { deleteSession } from '@/libs/session';
 
-export async function POST() {
+export const POST = withApiHandler(async () => {
   await deleteSession();
-  return Response.json({ success: true });
-}
+  return successResponse(null, 'Logout successful');
+});

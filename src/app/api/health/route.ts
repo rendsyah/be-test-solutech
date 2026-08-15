@@ -1,5 +1,5 @@
-const handler = () => {
-  return Response.json({ status: 'OK' });
-};
+import { successResponse, withApiHandler } from '@/libs/api/server';
 
-export const GET = handler;
+export const GET = withApiHandler(async () => {
+  return successResponse({ status: 'OK' }, 'Service is healthy');
+});
