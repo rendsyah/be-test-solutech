@@ -1,125 +1,309 @@
-# Next.js App - Modern Admin & Auth System
+# Solutech E-Commerce API — Technical Test
 
-A high-performance, strictly typed Next.js 16+ application featuring a robust admin dashboard, authentication system, and a modular architecture.
+REST API untuk modul inti toko online (e-commerce): **manajemen product** dan **pembuatan order**, dibangun dengan **Next.js (App Router)**, **Prisma**, dan **PostgreSQL**. Arsitektur berlapis: **route handler → service → repository**.
 
-## 🌐 Live Demo
+Dikerjakan sebagai Solutech Technical Test — Backend Developer. Frontend admin sederhana (management product) disertakan sebagai nilai tambah.
 
-- **URL:** [https://app.rendsyah.my.id](https://app.rendsyah.my.id)
-- **Username:** `admin`
-- **Password:** `12345678`
+## ✨ Fitur
+
+### Authentication (JWT)
+- `POST /api/auth/login` — login, mengembalikan **JWT** (dual-mode: Bearer token untuk Postman/API client, dan httpOnly cookie via iron-session untuk browser).
+- Endpoint product & order dilindungi — wajib menyertakan token.
+- Password di-hash dengan `bcryptjs`; JWT ditandatangani dengan `jose` (HS256).
+- **Rate limiting** pada login (5 percobaan / 15 menit per IP, sliding window in-memory).
+
+### Product (CRUD + soft delete)
+- `GET /api/products` — list dengan **pagination** + **search by nama** (case-insensitive), mengecualikan yang sudah di-soft-delete.
+- `GET /api/products/:id` — detail (404 bila tidak ada/terhapus).
+- `POST /api/products` — create.
+- `PATCH /api/products/:id` — update (parsial).
+- `DELETE /api/products/:id` — **soft delete** (set `deletedAt`).
+
+### Order (transactional)
+- `POST /api/orders` — create order: menerima daftar `{ productId, quantity }`, **mengurangi stok** dan **menghitung total harga di dalam satu database transaction** (`prisma.$transaction`). Menolak bila stok tidak cukup (409, anti-overselling) atau produk tidak ada (404).
+- `GET /api/orders` — list order **milik user yang login saja** (dari JWT), pagination.
+- `GET /api/orders/:id` — detail order milik user login saja (order milik user lain → 404).
+
+### Kualitas
+- Validasi Zod di **semua** endpoint.
+- Error handling konsisten: response envelope `{ status, success, message, data, errors, trace_id }` dengan HTTP status yang sesuai (200/201/400/401/404/409/500).
+- Request logging via **Winston** (method, URL, status, durasi).
+- Layered architecture per module (`repositories/`, `services/server`, `validations`, `types`).
+
+---
 
 ## 🚀 Tech Stack
 
-### Framework & UI
-- **Framework:** [Next.js 16+](https://nextjs.org) (App Router, Server Components, Server Actions)
-- **UI & Styling:** [React 19](https://react.dev), [Tailwind CSS 4](https://tailwindcss.com), [Radix UI](https://www.radix-ui.com)
-- **Charts:** [ApexCharts](https://apexcharts.com) & `react-apexcharts`
-- **Markdown:** [React Markdown](https://github.com/remarkjs/react-markdown) with [Remark GFM](https://github.com/remarkjs/remark-gfm)
-- **Toasts:** [Sonner](https://sonner.emilkowal.ski)
-- **Icons:** Custom SVG components
+- **Framework:** Next.js 16 (App Router, Route Handlers, Server Actions)
+- **ORM:** Prisma 7 + PostgreSQL 16
+- **Auth:** `jose` (JWT HS256), `bcryptjs`
+- **Validation:** Zod 4
+- **Logging:** Winston
+- **UI (bonus):** React 19, Tailwind CSS 4, TanStack Query 5, React Hook Form
+- **Tooling:** TypeScript, ESLint, Prettier, Husky/Commitlint
 
-### State & Logic
-- **Data Fetching:** [TanStack Query 5](https://tanstack.com/query) (React Query)
-- **API Client:** [Axios](https://axios-http.com) with interceptors
-- **Forms:** [React Hook Form](https://react-hook-form.com)
-- **Validation:** [Zod](https://zod.dev)
-- **Authentication:** [Iron Session](https://github.com/vvo/iron-session)
-- **Utilities:** [Day.js](https://day.js.org), [UA Parser JS](https://faisalman.github.io/ua-parser-js), [clsx](https://github.com/lukeed/clsx), [tailwind-merge](https://github.com/dcastil/tailwind-merge)
+---
 
-### Tooling
-- **Language:** TypeScript
-- **Linting & Formatting:** ESLint, Prettier (with import sorting)
-- **Git Hooks:** Husky, Lint-staged, Commitlint
-- **Deployment:** Docker, Docker Compose, Makefile
+## 📦 Prerequisites
 
-## 🏗️ Architecture & Patterns
+- **Node.js** >= 22.0.0
+- **pnpm** >= 10.12.0
+- **Docker** (untuk menjalankan PostgreSQL, opsional — bisa pakai Postgres lokal)
+- **PostgreSQL** 16
 
-This project follows a **Strict Module Pattern** and uses a dedicated **Server Layer** for data fetching and mutations.
+---
 
-### Key Principles
-- **Module-First:** Features are encapsulated in `src/modules/` with local services, hooks, and components.
-- **Server Services:** All API calls are abstracted into server/client services.
-- **RSC & Actions:** Server Components for data fetching; Server Actions for mutations.
-- **Safe State:** TanStack Query handles caching, revalidation, and loading states.
-- **Proxy Middleware:** Custom middleware for session management and route protection.
+## 🛠️ Setup & Menjalankan di Local
 
-## 📂 Project Structure
+### 1. Install dependencies
 
-```text
-src/
-├── app/              # App Router (admin, auth, api, layouts)
-├── components/       # Shared UI components (ui, forms, charts, icons)
-├── modules/          # Feature modules (auth, profile, settings, etc.)
-├── libs/             # Core libraries (api clients, session, constants, utils)
-├── hooks/            # Shared custom hooks
-├── contexts/         # Global React Contexts
-├── hocs/             # Higher-Order Components (e.g., withPermission)
-└── types/            # Global TypeScript definitions
-```
-
-## 🛠️ Getting Started
-
-### 1. Prerequisites
-- **Node.js:** >= 22.0.0
-- **npm:** >= 10.9.0
-- **Docker:** (Optional, for containerized deployment)
-
-### 2. Installation
 ```bash
-npm install
+pnpm install
 ```
 
-### 3. Environment Setup
-Copy `.env.example` to `.env`:
+### 2. Environment variables
+
+Salin `.env.example` menjadi `.env` dan sesuaikan nilainya:
+
 ```bash
 cp .env.example .env
 ```
 
-**Environment Variables:**
-- `APP_PORT`: Port for the Next.js application (default: 3000).
-- `API_BASE_URL`: Base URL for the backend API.
-- `SIGN_SECRET`: Secret used for signing (generate with `openssl rand -base64 24`).
-- `SESSION_SECRET`: Secret for `iron-session` (generate with `openssl rand -base64 24`).
+**Penjelasan variabel:**
 
-### 4. Development
-```bash
-npm run dev
-```
+| Variabel | Deskripsi | Contoh |
+|---|---|---|
+| `APP_PORT` | Port aplikasi Next.js | `3000` |
+| `DATABASE_URL` | Koneksi PostgreSQL | `postgresql://solutech:solutech@localhost:5432/solutech?schema=public` |
+| `JWT_SECRET` | Secret untuk menandatangani JWT (min 32 char di production; generate: `openssl rand -base64 48`) | `secret` |
+| `JWT_EXPIRES_IN` | Masa berlaku token | `1h` |
+| `BCRYPT_SALT_ROUNDS` | Salt rounds bcrypt | `10` |
+| `SESSION_SECRET` | Secret iron-session untuk cookie FE (min 32 char; generate: `openssl rand -base64 24`) | `secret` |
 
-## 📜 Available Scripts
+### 3. Database — dua opsi
 
-- `npm run dev`: Start development server with HMR.
-- `npm run build`: Build the application for production.
-- `npm run start`: Start the production server.
-- `npm run lint`: Run ESLint to catch code issues.
-- `npm run format:check`: Check code formatting with Prettier.
-- `npm run format:write`: Automatically format code with Prettier.
-- `npm run generate:module <module-name>`: Generate a new module with the standard 9-folder structure.
-- `npm run prepare`: Setup Husky git hooks.
-
-## 🧱 Module Generation
-
-To maintain architectural consistency, use the built-in scaffolding script to create new feature modules:
+**Opsi A — PostgreSQL via Docker (disarankan):**
 
 ```bash
-npm run generate:module <module-name>
+make db-up            # docker compose up -d db
 ```
 
-This script generates:
-- **9 Standard Folders:** `actions`, `components`, `constants`, `helpers`, `hooks`, `services`, `types`, `validations`, `views`.
-- **Boilerplate:** Ready-to-use routes, headers, and a default view.
-- **Strict Indexing:** Each folder includes an `index.ts` with default exports to ensure clean module boundaries.
+**Opsi B — PostgreSQL lokal:**
 
-## 🐳 Deployment
+Buat database & user `solutech` (atau sesuaikan `DATABASE_URL` di `.env`).
 
-The project is containerized using Docker and includes a `Makefile` for streamlined operations.
+### 4. Buat tabel + jalankan seed
 
-### Makefile Commands
-- `make deploy IMAGE_TAG=latest REGISTRY_HOST=...`: Deploy the application by pulling from a registry.
-- `make restart`: Restart the running containers.
+Dua cara yang setara:
+
+**Cara 1 — Command SQL create table (sesuai requirement deliverable):**
+
+```bash
+# 1. Jalankan file SQL untuk membuat tabel (postgresql://... atau psql)
+psql "$DATABASE_URL" -f prisma/create_tables.sql
+
+# 2. Generate Prisma Client (wajib setelah schema berubah)
+pnpm db:generate
+
+# 3. Seed data awal
+pnpm db:seed
+```
+
+**Cara 2 — Prisma Migrate (alternatif, lebih cepat untuk dev):**
+
+```bash
+pnpm db:generate
+pnpm db:migrate      # prisma migrate dev
+pnpm db:seed
+```
+
+> File SQL `prisma/create_tables.sql` berisi perintah `CREATE TABLE` lengkap (termasuk enum), dibuat langsung dari `schema.prisma` — selalu sinkron dengan model.
+
+### 5. Jalankan aplikasi
+
+```bash
+pnpm dev              # development (http://localhost:3000)
+# atau
+pnpm build && pnpm start   # production
+```
+
+**Kredensial seed:**
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@solutech.dev` | `admin123` |
+| User | `user@solutech.dev` | `user123` |
 
 ---
 
-## License
+## 🔐 Pengujian via Postman
 
-This project is [UNLICENSED](LICENSE).
+1. Import `docs/postman/solutech.postman_collection.json`.
+2. Set variable `baseUrl` (default sudah `http://localhost:3000`).
+3. Jalankan **Auth → Login**. Token otomatis tersimpan ke variable `token` (via test script).
+4. Endpoint protected otomatis memakai `Authorization: Bearer {{token}}`.
+
+Flow yang disarankan: Login → List Products → Create Product → Create Order → List My Orders → Get Order Detail.
+
+Contoh request langsung (curl):
+
+```bash
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@solutech.dev","password":"admin123"}'
+
+# List products (dengan token dari response login)
+curl "http://localhost:3000/api/products?page=1&limit=10&search=" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+# Create order
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{"items":[{"productId":"<PRODUCT_ID>","quantity":2}]}'
+```
+
+---
+
+## 📡 API Reference
+
+Response envelope (semua endpoint):
+
+```json
+{
+  "status": 200,
+  "success": true,
+  "message": "Success",
+  "data": {},
+  "errors": [],
+  "trace_id": "uuid"
+}
+```
+
+| Method | Path | Auth | Deskripsi |
+|---|---|---|---|
+| POST | `/api/auth/login` | ❌ (rate-limited) | Login → JWT + user |
+| POST | `/api/auth/logout` | ❌ | Logout (hapus cookie) |
+| GET | `/api/products?page=&limit=&search=` | ✅ | List product (pagination + search) |
+| GET | `/api/products/:id` | ✅ | Detail product |
+| POST | `/api/products` | ✅ | Create product |
+| PATCH | `/api/products/:id` | ✅ | Update product |
+| DELETE | `/api/products/:id` | ✅ | Soft delete product |
+| POST | `/api/orders` | ✅ | Create order (transactional) |
+| GET | `/api/orders?page=&limit=` | ✅ | List order milik user login |
+| GET | `/api/orders/:id` | ✅ | Detail order milik user login |
+| GET | `/api/health` | ❌ | Health check |
+
+---
+
+## 🏗️ Arsitektur & Struktur Project
+
+```
+prisma/
+├── schema.prisma          # Model database (User, Product, Order, OrderItem)
+├── seed.ts                # Seed: 2 user + 10 produk
+├── create_tables.sql      # Command SQL create table (deliverable)
+└── migrations/            # Prisma migrations
+
+src/
+├── app/
+│   ├── api/               # Route handlers (auth, products, orders)
+│   │   ├── auth/login/route.ts
+│   │   ├── products/route.ts + [id]/route.ts
+│   │   └── orders/route.ts + [id]/route.ts
+│   ├── (admin)/           # FE admin (login-protected)
+│   │   └── products/      # Management product (nilai tambah)
+│   └── (auth)/login/      # Halaman login
+├── modules/
+│   ├── auth/              # repositories, services/server, validations, types, actions, FE
+│   ├── product/           # repositories, services/{server,client}, validations, types, actions, hooks, FE
+│   └── order/             # repositories, services/server, validations, types
+├── libs/
+│   ├── auth/              # jwt.ts (jose), password.ts (bcrypt), guard.ts (requireAuth)
+│   ├── db/prisma.ts       # PrismaClient singleton + driver adapter
+│   ├── logger/winston.ts  # Request & error logging
+│   ├── rate-limit/        # In-memory sliding window
+│   └── api/server/        # withApiHandler, successResponse/errorResponse
+└── types/                 # Global types (ApiResponse, Pagination)
+```
+
+### Layered Architecture
+
+```
+Route Handler (app/api/*)   →  Service (modules/*/services/server)  →  Repository (modules/*/repositories)  →  Prisma/PostgreSQL
+     zod validation                    business logic                      data access (Prisma queries)
+```
+
+- **Route handler** = thin wrapper: parse body → zod validate → `requireAuth()` → panggil service → `successResponse`. Error ditangani `withApiHandler` (mapping AppError/ZodError → envelope + logging).
+- **Service** = business logic murni (meng-*throw* `AppError`, tidak tahu HTTP). Untuk order: transaction, cek stok, hitung total.
+- **Repository** = hanya akses data Prisma (tidak ada business logic).
+
+---
+
+## 📜 Scripts
+
+| Script | Fungsi |
+|---|---|
+| `pnpm dev` | Development server |
+| `pnpm build` / `pnpm start` | Build & jalankan production |
+| `pnpm lint` | ESLint |
+| `pnpm db:generate` | Generate Prisma Client |
+| `pnpm db:migrate` | Jalankan migration (dev) |
+| `pnpm db:deploy` | Jalankan migration (production) |
+| `pnpm db:seed` | Seed database |
+| `pnpm db:studio` | Prisma Studio |
+| `make db-up` / `make db-down` | Start/stop PostgreSQL container |
+
+---
+
+## 📝 Keputusan Teknis & Asumsi
+
+1. **JWT dual-mode (Bearer + httpOnly cookie).** Test menyebutkan pengujian via Postman dengan header `Authorization`. FE admin (bonus) menyimpan token di httpOnly cookie (iron-session) agar aman dari XSS. Guard menerima Bearer header dahulu, fallback ke cookie — diverifikasi dengan verifier yang sama.
+2. **Soft delete** product dengan kolom `deletedAt` (nullable). List & detail mengecualikan produk terhapus; DELETE hanya menandai `deletedAt` — data tetap ada untuk audit.
+3. **Order transaction.** Pembuatan order memakai `prisma.$transaction` sehingga pengurangan stok + insert order + order items bersifat atomik. Decrement stok menggunakan kondisi `stock >= quantity` (`updateMany`) untuk mencegah overselling di bawah konkurensi.
+4. **Snapshot harga & nama** disimpan di `OrderItem` (`productName`, `unitPrice`, `subtotal`) agar riwayat order tidak berubah walau harga/nama produk di-update kemudian.
+5. **Repository layer** di dalam module (`repositories/`) memisahkan data access dari business logic, sesuai requirement "layered architecture".
+6. **Rate limiter in-memory** (Map per IP). Memadai untuk single-instance; untuk multi-instance/production sebaiknya diganti Redis — tercatat sebagai asumsi.
+7. **Harga disimpan `Decimal(12,2)`** — tidak memakai `float` untuk menghindari masalah presisi uang. Konversi ke string pada response.
+8. **Logging via Winston** hanya console transport (dev) untuk kesederhanaan; di production dapat ditambah transport file/JSON aggregator.
+9. **Prisma 7** memakai driver adapter (`@prisma/adapter-pg`) yang merupakan konfigurasi resmi untuk koneksi PostgreSQL.
+
+---
+
+## ✅ Daftar Fitur Selesai / Belum
+
+**Selesai:**
+- [x] Login JWT + proteksi endpoint (Bearer + cookie)
+- [x] CRUD Product + pagination + search + soft delete
+- [x] Order creation (transaction, decrement stok, hitung total, anti-overselling)
+- [x] List & detail order milik user login saja
+- [x] Zod validation + response envelope + status code sesuai
+- [x] Prisma seed (2 user + 10 produk)
+- [x] SQL create table (`prisma/create_tables.sql`)
+- [x] `.env.example` + README setup
+- [x] Postman collection
+- [x] Rate limiting (login) + request logging (Winston)
+- [x] FE admin management product (nilai tambah)
+
+**Belum / rencana (opsional):**
+- [ ] Redis caching untuk list product (nilai tambah, butuh service Redis)
+- [ ] Unit/integration test (vitest)
+- [ ] Register user endpoint (saat ini cukup user seed, sesuai test)
+
+---
+
+## ⏱️ Estimasi Waktu Pengerjaan
+
+| Aktivitas | Estimasi |
+|---|---|
+| Analisis technical test & gap analysis base repo | 0,5 jam |
+| Cleanup base repo (hapus module/pages tidak terpakai, sesuaikan arsitektur) | 1,5 jam |
+| Setup Prisma + PostgreSQL + seed | 1 jam |
+| Auth (JWT, guard, login endpoint) | 1,5 jam |
+| Product module (repository/service/validation/routes) | 1,5 jam |
+| Order module (transaction + routes) | 1,5 jam |
+| Error handling + logging + rate limit | 1 jam |
+| FE admin product (nilai tambah) | 2 jam |
+| Dokumentasi (README, Postman, SQL) | 1 jam |
+| **Total** | **± 11 jam** |
