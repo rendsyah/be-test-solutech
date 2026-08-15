@@ -1,6 +1,25 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: solutech-db-container
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: solutech
+      POSTGRES_PASSWORD: solutech
+      POSTGRES_DB: solutech
+    ports:
+      - 5432:5432
+    volumes:
+      - solutech-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solutech -d solutech"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - shared-networks
+
   nextjs-app:
-    container_name: nextjs-app-container
     image: ${REGISTRY_HOST}/nextjs-app:${IMAGE_TAG:-v1.0.0}
     restart: unless-stopped
     ports:
@@ -13,8 +32,14 @@ services:
       TZ: Asia/Jakarta
     networks:
       - shared-networks
+    depends_on:
+      db:
+        condition: service_healthy
 
 networks:
   shared-networks:
     name: shared-networks
     external: true
+
+volumes:
+  solutech-db-data:

@@ -26,3 +26,45 @@ restart:
 	@echo "Restarting containers..."
 	@docker compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) restart
 	@echo "Restart complete!"
+
+# ====================================================
+# Database Commands
+# ====================================================
+
+# Start PostgreSQL container for local development
+.PHONY: db-up
+db-up:
+	@echo "Starting database container..."
+	@docker compose -f $(COMPOSE_FILE) up -d db
+	@echo "Database is ready!"
+
+# Stop PostgreSQL container
+.PHONY: db-down
+db-down:
+	@echo "Stopping database container..."
+	@docker compose -f $(COMPOSE_FILE) down db
+	@echo "Database stopped!"
+
+# Generate Prisma Client
+.PHONY: db-generate
+db-generate:
+	@echo "Generating Prisma Client..."
+	@pnpm db:generate
+
+# Apply migrations (dev)
+.PHONY: db-migrate
+db-migrate:
+	@echo "Applying migrations..."
+	@pnpm db:migrate
+
+# Apply migrations (production)
+.PHONY: db-deploy
+db-deploy:
+	@echo "Deploying migrations..."
+	@pnpm db:deploy
+
+# Run database seed
+.PHONY: db-seed
+db-seed:
+	@echo "Seeding database..."
+	@pnpm db:seed
