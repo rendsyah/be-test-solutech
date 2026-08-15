@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
+import type { ProductListDto } from '@/types';
+
 import { productClientService } from '../services/client';
-import type { ProductListDto } from '../types';
 
 export const PRODUCT_KEY = 'products';
 

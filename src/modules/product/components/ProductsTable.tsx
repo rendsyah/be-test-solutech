@@ -1,7 +1,6 @@
 'use client';
 
-import { PencilSquareIcon } from '@/components/icons';
-import { Button, IconButton } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import {
   Pagination,
   Table,
@@ -12,9 +11,9 @@ import {
   TableToolbar,
 } from '@/components/ui';
 import type { ColumnDef } from '@/components/ui';
+import { ProductStatus } from '@/generated/prisma/enums';
 import type { PaginationMeta } from '@/types';
-
-import type { ProductResponse } from '../types';
+import type { ProductResponse } from '@/types';
 
 type ProductsTableProps = {
   data: ProductResponse[];
@@ -28,6 +27,7 @@ type ProductsTableProps = {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onRetry: () => void;
+  onFilter: () => void;
 };
 
 const formatPrice = (value: string) => {
@@ -50,6 +50,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
   onEdit,
   onDelete,
   onRetry,
+  onFilter,
 }) => {
   const columns: ColumnDef<ProductResponse>[] = [
     {
@@ -78,14 +79,33 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
       render: (row) => <span>{row.stock}</span>,
     },
     {
+      key: 'status',
+      label: 'Status',
+      align: 'center',
+      render: (row) => (
+        <Badge
+          variant="light"
+          color={row.status === ProductStatus.ACTIVE ? 'success' : 'error'}
+          size="sm"
+        >
+          {row.status}
+        </Badge>
+      ),
+    },
+    {
       key: 'action',
       label: 'Action',
       align: 'right',
       render: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <IconButton aria-label="Edit" onClick={() => onEdit(row.id)}>
-            <PencilSquareIcon className="size-4" />
-          </IconButton>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-primary hover:bg-primary/10"
+            onClick={() => onEdit(row.id)}
+          >
+            Edit
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -101,7 +121,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
 
   return (
     <TableContainer>
-      <TableToolbar search={search} onSearch={onSearch} onFilter={() => {}} />
+      <TableToolbar search={search} onSearch={onSearch} onFilter={onFilter} />
       <Table>
         <TableHead columns={columns} />
         <TableData

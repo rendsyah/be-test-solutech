@@ -5,14 +5,16 @@ import { useEffect, useState } from 'react';
 
 import { Button, Modal } from '@/components/ui';
 import { useAlert } from '@/contexts';
+import { UserRole } from '@/generated/prisma/enums';
+import { withPermissions } from '@/hocs';
 import { useDebounce } from '@/hooks';
 
 import { productDeleteAction } from '../actions';
-import { ProductsHeader, ProductsTable } from '../components';
+import { ProductsFilterModal, ProductsHeader, ProductsTable } from '../components';
 import { PRODUCT_ROUTES } from '../constants';
 import { useProducts, useProductsFilter } from '../hooks';
 
-export const ProductViewPage: React.FC = () => {
+const ProductView: React.FC = () => {
   const router = useRouter();
   const { showAlert } = useAlert();
   const productsFilter = useProductsFilter();
@@ -71,8 +73,21 @@ export const ProductViewPage: React.FC = () => {
           onEdit={(id) => router.push(PRODUCT_ROUTES.edit(id))}
           onDelete={(id) => setSelectedId(id)}
           onRetry={products.refetch}
+          onFilter={productsFilter.onOpenFilter}
         />
       </div>
+      <ProductsFilterModal
+        key={`${productsFilter.filter.startDate}-${productsFilter.filter.endDate}-${productsFilter.filter.status}`}
+        isOpen={productsFilter.isFilterOpen}
+        filter={{
+          startDate: productsFilter.filter.startDate,
+          endDate: productsFilter.filter.endDate,
+          status: productsFilter.filter.status,
+        }}
+        onClose={productsFilter.onCloseFilter}
+        onApply={productsFilter.onApplyFilter}
+        onReset={productsFilter.onResetFilter}
+      />
       <Modal
         isOpen={selectedId !== null}
         title="Delete Product"
@@ -100,3 +115,5 @@ export const ProductViewPage: React.FC = () => {
     </div>
   );
 };
+
+export const ProductViewPage = withPermissions(ProductView, [UserRole.ADMIN]);

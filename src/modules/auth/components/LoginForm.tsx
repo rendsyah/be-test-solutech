@@ -7,10 +7,10 @@ import { EyeIcon, EyeSlashIcon } from '@/components/icons';
 import { Button } from '@/components/ui';
 import { useAlert } from '@/contexts';
 import { useFormAction } from '@/hooks';
+import type { LoginResponse } from '@/types';
+import { loginSchema, type LoginDto } from '@/validations';
 
 import { loginAction } from '../actions';
-import type { LoginResponse } from '../types';
-import { loginSchema, type LoginDto } from '../validations';
 
 export const LoginForm: React.FC = () => {
   const searchParams = useSearchParams();

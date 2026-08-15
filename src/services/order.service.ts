@@ -2,11 +2,10 @@ import 'server-only';
 
 import type { Order, OrderItem } from '@/generated/prisma/client';
 import { prisma } from '@/libs/db';
-import { AppError } from '@/libs/utils';
-
-import { orderRepository } from '../../repositories';
-import type { OrderResponse } from '../../types';
-import type { OrderCreateDto, OrderQueryDto } from '../../validations';
+import { AppError, buildPaginationMeta } from '@/libs/utils';
+import { orderRepository } from '@/repositories';
+import type { OrderResponse } from '@/types';
+import type { OrderCreateDto, OrderQueryDto } from '@/validations';
 
 type OrderWithItems = Omit<Order, 'items'> & { items: OrderItem[] };
 
@@ -28,64 +27,9 @@ const toResponse = (order: OrderWithItems): OrderResponse => ({
 });
 
 export const orderService = {
-  create: async (userId: string, dto: OrderCreateDto): Promise<OrderResponse> => {
-    const order = await prisma.$transaction(async (tx) => {
-      let totalPrice = 0;
-      const items: {
-        productId: string;
-        productName: string;
-        quantity: number;
-        unitPrice: number;
-      }[] = [];
-
-      for (const item of dto.items) {
-        const product = await tx.product.findFirst({
-          where: { id: item.productId, deletedAt: null },
-          select: { id: true, name: true, price: true, stock: true },
-        });
-        if (!product) {
-          throw AppError.notFound(`Product not found: ${item.productId}`);
-        }
-        if (product.stock < item.quantity) {
-          throw AppError.conflict(`Insufficient stock for product: ${product.name}`);
-        }
-
-        const result = await tx.product.updateMany({
-          where: { id: product.id, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
-        });
-        if (result.count === 0) {
-          throw AppError.conflict(`Insufficient stock for product: ${product.name}`);
-        }
-
-        const unitPrice = Number(product.price);
-        totalPrice += unitPrice * item.quantity;
-        items.push({
-          productId: product.id,
-          productName: product.name,
-          quantity: item.quantity,
-          unitPrice,
-        });
-      }
-
-      return tx.order.create({
-        data: {
-          userId,
-          totalPrice,
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              subtotal: item.unitPrice * item.quantity,
-            })),
-          },
-        },
-        include: { items: true },
-      });
-    });
-
+  getById: async (userId: string, id: string): Promise<OrderResponse> => {
+    const order = await orderRepository.findByIdForUser(userId, id);
+    if (!order) throw AppError.notFound('Order not found');
     return toResponse(order);
   },
   getList: async (userId: string, query: OrderQueryDto) => {
@@ -93,20 +37,77 @@ export const orderService = {
       orderRepository.findManyByUser({ userId, page: query.page, limit: query.limit }),
       orderRepository.countByUser(userId),
     ]);
-
     return {
       items: items.map(toResponse),
-      meta: {
-        page: query.page,
-        total_data: total,
-        total_pages: Math.ceil(total / query.limit),
-        total_per_page: query.limit,
-      },
+      meta: buildPaginationMeta(query.page, query.limit, total),
     };
   },
-  getById: async (userId: string, id: string): Promise<OrderResponse> => {
-    const order = await orderRepository.findByIdForUser(userId, id);
-    if (!order) throw AppError.notFound('Order not found');
+  create: async (userId: string, dto: OrderCreateDto): Promise<OrderResponse> => {
+    const order = await prisma.$transaction(async (tx) => {
+      const productIds = dto.items.map((item) => item.productId);
+
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds }, deletedAt: null },
+        select: { id: true, name: true, price: true, stock: true },
+      });
+
+      const productMap = new Map(products.map((product) => [product.id, product]));
+
+      for (const item of dto.items) {
+        const product = productMap.get(item.productId);
+        if (!product) {
+          throw AppError.notFound(`Product not found: ${item.productId}`);
+        }
+        if (product.stock < item.quantity) {
+          throw AppError.conflict(`Insufficient stock for product: ${product.name}`);
+        }
+      }
+
+      const results = await Promise.all(
+        dto.items.map((item) =>
+          tx.product.updateMany({
+            where: { id: item.productId, stock: { gte: item.quantity } },
+            data: { stock: { decrement: item.quantity } },
+          }),
+        ),
+      );
+
+      const failedIndex = results.findIndex((result) => result.count === 0);
+      if (failedIndex !== -1) {
+        const failedItem = dto.items[failedIndex];
+        const product = productMap.get(failedItem.productId);
+        throw AppError.conflict(
+          `Insufficient stock for product: ${product?.name ?? failedItem.productId}`,
+        );
+      }
+
+      const totalPrice = dto.items.reduce((sum, item) => {
+        const product = productMap.get(item.productId);
+        return sum + Number(product!.price) * item.quantity;
+      }, 0);
+
+      return tx.order.create({
+        data: {
+          userId,
+          totalPrice,
+          items: {
+            create: dto.items.map((item) => {
+              const product = productMap.get(item.productId)!;
+              const unitPrice = Number(product.price);
+              return {
+                productId: product.id,
+                productName: product.name,
+                quantity: item.quantity,
+                unitPrice,
+                subtotal: unitPrice * item.quantity,
+              };
+            }),
+          },
+        },
+        include: { items: true },
+      });
+    });
+
     return toResponse(order);
   },
 };

@@ -1,9 +1,14 @@
+export type ApiError = {
+  field: string;
+  message: string;
+};
+
 export type ApiResponse<T = unknown> = {
   status: number;
   success: boolean;
   message: string;
   data: T;
-  errors?: unknown[];
+  errors?: ApiError[];
   trace_id?: string;
 };
 

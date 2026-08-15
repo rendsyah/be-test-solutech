@@ -1,3 +1,5 @@
+import type { UserRole, UserStatus } from '@/generated/prisma/enums';
+
 export type Options<T = string> = {
   id: T;
   name: string;
@@ -7,18 +9,10 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  role: UserRole;
+  status: UserStatus;
   image: string;
-  role?: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type Permissions = {
-  id: string;
-  name: string;
-  key: string;
-  is_assigned: boolean;
+  last_login_at: string | null;
 };
 
 export type Menus = {
@@ -33,6 +27,6 @@ export type Menus = {
   sort: number;
   is_assigned: boolean;
   status: number;
-  permissions: Permissions[];
+  permissions: string[];
   child: Menus[];
 };

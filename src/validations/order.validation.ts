@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { paginationSchema } from './common.validation';
+
 export const orderCreateSchema = z.object({
   items: z
     .array(
@@ -11,10 +13,7 @@ export const orderCreateSchema = z.object({
     .min(1, 'Order must have at least one item'),
 });
 
-export const orderQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(10),
-});
+export const orderQuerySchema = paginationSchema;
 
 export type OrderCreateDto = z.infer<typeof orderCreateSchema>;
 export type OrderQueryDto = z.infer<typeof orderQuerySchema>;

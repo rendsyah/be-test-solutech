@@ -1,9 +1,12 @@
 'use client';
 
+import { UserRole } from '@/generated/prisma/enums';
+import { withPermissions } from '@/hocs';
+
 import { ProductsHeader } from '../components';
 import { ProductForm } from '../components';
 
-export const ProductCreateViewPage: React.FC = () => {
+const ProductCreateView: React.FC = () => {
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12">
@@ -15,3 +18,5 @@ export const ProductCreateViewPage: React.FC = () => {
     </div>
   );
 };
+
+export const ProductCreateViewPage = withPermissions(ProductCreateView, [UserRole.ADMIN]);

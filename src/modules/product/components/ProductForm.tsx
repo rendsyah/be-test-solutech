@@ -4,16 +4,22 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { FormProvider } from 'react-hook-form';
 
-import { FormCol, FormFieldValidation, InputValidation } from '@/components/forms';
+import {
+  CurrencyInputValidation,
+  FormCol,
+  FormFieldValidation,
+  InputValidation,
+  SelectValidation,
+} from '@/components/forms';
 import { Button } from '@/components/ui';
 import { useAlert } from '@/contexts';
 import { useFormAction } from '@/hooks';
+import type { ProductResponse } from '@/types';
+import { productFormSchema, type ProductFormDto } from '@/validations';
 
 import { productCreateAction, productUpdateAction } from '../actions';
-import { PRODUCT_ROUTES } from '../constants';
+import { PRODUCT_ROUTES, PRODUCT_STATUS_OPTIONS } from '../constants';
 import { PRODUCT_KEY } from '../hooks';
-import type { ProductResponse } from '../types';
-import { productFormSchema, type ProductFormDto } from '../validations';
 
 type ProductFormProps = {
   mode: 'create' | 'edit';
@@ -24,8 +30,9 @@ const toFormValues = (product?: ProductResponse): ProductFormDto => ({
   id: product?.id,
   name: product?.name ?? '',
   description: product?.description ?? '',
-  price: product ? Number(product.price) : 0,
+  price: product?.price ?? '',
   stock: product?.stock ?? 0,
+  status: product?.status ?? 'ACTIVE',
 });
 
 export const ProductForm: React.FC<ProductFormProps> = ({ mode, product }) => {
@@ -79,17 +86,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({ mode, product }) => {
           </FormCol>
           <FormCol className="col-span-1">
             <FormFieldValidation name="price" label="Price" required>
-              <InputValidation name="price" type="number" placeholder="0" />
+              <CurrencyInputValidation name="price" placeholder="0" />
             </FormFieldValidation>
           </FormCol>
           <FormCol className="col-span-1">
             <FormFieldValidation name="stock" label="Stock" required>
-              <InputValidation name="stock" type="number" placeholder="0" />
+              <InputValidation name="stock" inputMode="numeric" placeholder="0" />
+            </FormFieldValidation>
+          </FormCol>
+          <FormCol className="col-span-1">
+            <FormFieldValidation name="status" label="Status" required>
+              <SelectValidation
+                name="status"
+                placeholder="Select Status"
+                options={PRODUCT_STATUS_OPTIONS}
+              />
             </FormFieldValidation>
           </FormCol>
         </div>
         <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
           <Button
+            className="w-32"
             type="button"
             variant="outline"
             onClick={() => router.push(PRODUCT_ROUTES.root)}
@@ -97,8 +114,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ mode, product }) => {
           >
             Cancel
           </Button>
-          <Button type="submit" isLoading={isPending} disabled={isPending}>
-            {isEdit ? 'Update' : 'Create'}
+          <Button className="w-32" type="submit" isLoading={isPending} disabled={isPending}>
+            Submit
           </Button>
         </div>
       </form>
