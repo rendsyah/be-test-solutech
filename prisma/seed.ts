@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import { Pool } from 'pg';
 
-import { PrismaClient, UserRole } from '../src/generated/prisma/client';
+import { PrismaClient, UserRole, UserStatus } from '../src/generated/prisma/client';
 
 const adapter = new PrismaPg(new Pool({ connectionString: process.env.DATABASE_URL }));
 const prisma = new PrismaClient({ adapter });
@@ -85,6 +85,7 @@ async function main() {
       passwordHash: adminPassword,
       name: 'Administrator',
       role: UserRole.ADMIN,
+      status: UserStatus.ACTIVE,
     },
   });
 
@@ -96,6 +97,7 @@ async function main() {
       passwordHash: userPassword,
       name: 'Regular User',
       role: UserRole.USER,
+      status: UserStatus.ACTIVE,
     },
   });
 

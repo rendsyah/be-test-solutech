@@ -6,21 +6,40 @@ services:
     environment:
       POSTGRES_USER: solutech
       POSTGRES_PASSWORD: solutech
-      POSTGRES_DB: solutech
+      POSTGRES_DB: db_solutech
     ports:
       - 5432:5432
     volumes:
       - solutech-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U solutech -d solutech"]
+      test: ['CMD-SHELL', 'pg_isready -U solutech -d db_solutech']
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - shared-networks
+      - solutech-network
 
-  nextjs-app:
-    image: ${REGISTRY_HOST}/nextjs-app:${IMAGE_TAG:-v1.0.0}
+  redis:
+    image: redis:7-alpine
+    container_name: solutech-redis-container
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - solutech-redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - solutech-network
+
+  solutech-ecommerce-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solutech-ecommerce-api-container
     restart: unless-stopped
     ports:
       - 127.0.0.1:${APP_PORT}:${APP_PORT}
@@ -31,15 +50,17 @@ services:
       PORT: ${APP_PORT}
       TZ: Asia/Jakarta
     networks:
-      - shared-networks
+      - solutech-network
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
 networks:
-  shared-networks:
-    name: shared-networks
-    external: true
+  solutech-network:
+    driver: bridge
 
 volumes:
   solutech-db-data:
+  solutech-redis-data:

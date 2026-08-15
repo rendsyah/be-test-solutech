@@ -4,7 +4,7 @@
 FROM node:22.21.1-alpine AS base
 
 # Enable Corepack and activate the latest pnpm
-RUN corepack enable && corepack prepare pnpm@10.12.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.13.0 --activate
 
 # ====================================================
 # DEPENDENCIES STAGE
@@ -49,7 +49,7 @@ USER nextjs
 
 ENV HOSTNAME=0.0.0.0
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:9000/api/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${APP_PORT}/api/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]

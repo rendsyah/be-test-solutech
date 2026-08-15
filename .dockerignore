@@ -44,8 +44,6 @@ playwright.config.*
 .npmrc
 eslint.config.mjs
 docker-compose.yml
-Makefile
-scripts
 
 # ====================================================
 # DOCKER FILES (Already in context)
