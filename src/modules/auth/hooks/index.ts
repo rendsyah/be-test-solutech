@@ -1,1 +1,1 @@
-export * from './useAuthForgot';
+export {};

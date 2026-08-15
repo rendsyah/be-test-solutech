@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { FormProvider } from 'react-hook-form';
@@ -7,15 +6,13 @@ import { FormCol, FormFieldValidation, InputValidation } from '@/components/form
 import { EyeIcon, EyeSlashIcon } from '@/components/icons';
 import { Button } from '@/components/ui';
 import { useAlert } from '@/contexts';
-import { useDevice, useFormAction } from '@/hooks';
+import { useFormAction } from '@/hooks';
 
 import { loginAction } from '../actions';
-import { AUTH_ROUTES } from '../constants';
 import type { LoginResponse } from '../types';
 import { loginSchema, type LoginDto } from '../validations';
 
 export const LoginForm: React.FC = () => {
-  const device = useDevice();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? undefined;
 
@@ -28,7 +25,6 @@ export const LoginForm: React.FC = () => {
     {
       transform: (values) => ({
         ...values,
-        device,
         callbackUrl,
       }),
       onError: (message) => {
@@ -51,8 +47,8 @@ export const LoginForm: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 gap-4">
           <FormCol className="col-span-1">
-            <FormFieldValidation name="user" label="Username" required>
-              <InputValidation name="user" placeholder="Enter Username" />
+            <FormFieldValidation name="email" label="Email" required>
+              <InputValidation name="email" placeholder="Enter Email" />
             </FormFieldValidation>
           </FormCol>
           <FormCol className="col-span-1">
@@ -74,14 +70,6 @@ export const LoginForm: React.FC = () => {
               />
             </FormFieldValidation>
           </FormCol>
-          <div className="col-span-1 flex justify-end">
-            <Link
-              href={AUTH_ROUTES.forgotPassword}
-              className="text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              Forgot password?
-            </Link>
-          </div>
         </div>
         <Button type="submit" className="mt-auto" isLoading={isPending} disabled={isPending}>
           {isPending ? 'Loading...' : 'Sign In'}

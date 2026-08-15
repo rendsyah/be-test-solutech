@@ -1,9 +1,14 @@
-export type LoginResponse = {
-  access_token: string;
-  redirect_to: string;
+import type { UserRole } from '@/generated/prisma/enums';
+
+export type UserResponse = {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
 };
 
-export type ForgotResponse = {
-  token: string;
-  expires_in: number;
+export type LoginResponse = {
+  access_token: string;
+  user: UserResponse;
+  expires_in: string;
 };

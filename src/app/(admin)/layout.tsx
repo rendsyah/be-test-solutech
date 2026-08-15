@@ -1,18 +1,22 @@
 import { AdminLayout } from '@/components/layouts';
 import { ResourceProvider } from '@/contexts';
-import { unwrapResponse } from '@/libs/api/server';
-import { usersServerService } from '@/modules/settings/users';
+import type { User } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminLayoutPage({ children }: { children: React.ReactNode }) {
-  const response = await usersServerService.getResource();
-  const resources = unwrapResponse(response);
+const placeholderUser: User = {
+  id: 0,
+  name: 'Admin',
+  email: 'admin@example.com',
+  phone: '',
+  image: '',
+  created_at: '',
+  updated_at: '',
+};
 
-  const { user, menus, permissions } = resources;
-
+export default function AdminLayoutPage({ children }: { children: React.ReactNode }) {
   return (
-    <ResourceProvider user={user} menus={menus} permissions={permissions}>
+    <ResourceProvider user={placeholderUser} menus={[]} permissions={[]}>
       <AdminLayout>{children}</AdminLayout>
     </ResourceProvider>
   );

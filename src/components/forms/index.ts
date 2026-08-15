@@ -5,7 +5,6 @@ export * from './Datepicker';
 export * from './FormField';
 export * from './Input';
 export * from './Label';
-export * from './Markdown';
 export * from './Radio';
 export * from './Select';
 export * from './Switch';

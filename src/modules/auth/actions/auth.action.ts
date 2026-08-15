@@ -3,11 +3,12 @@
 import { redirect } from 'next/navigation';
 
 import { setSession } from '@/libs/session';
+import { AppError } from '@/libs/utils';
 import type { ActionState } from '@/types';
 
 import { authServerService } from '../services/server';
-import type { ForgotResponse, LoginResponse } from '../types';
-import type { LoginDto, RequestOtpDto, ResetPasswordDto, VerifyOtpDto } from '../validations';
+import type { LoginResponse } from '../types';
+import type { LoginDto } from '../validations';
 
 export const loginAction = async (
   _: ActionState<LoginResponse>,
@@ -15,30 +16,21 @@ export const loginAction = async (
 ): Promise<ActionState<LoginResponse>> => {
   const { callbackUrl, ...data } = dto;
 
-  const result = await authServerService.login(data);
-  if (!result.success) return result;
-
-  await setSession(result.data.access_token, result.data.redirect_to);
-  redirect(callbackUrl ?? result.data.redirect_to);
-};
-
-export const requestOtpAction = async (
-  _: ActionState<ForgotResponse>,
-  dto: RequestOtpDto,
-): Promise<ActionState<ForgotResponse>> => {
-  return authServerService.requestOtp(dto);
-};
-
-export const verifyOtpAction = async (
-  _: ActionState<ForgotResponse>,
-  dto: VerifyOtpDto,
-): Promise<ActionState<ForgotResponse>> => {
-  return authServerService.verifyOtp(dto);
-};
-
-export const resetPasswordAction = async (
-  _: ActionState,
-  dto: ResetPasswordDto,
-): Promise<ActionState> => {
-  return authServerService.resetPassword(dto);
+  try {
+    const result = await authServerService.login(data);
+    await setSession(result.access_token, callbackUrl ?? '/products');
+    redirect(callbackUrl ?? '/products');
+  } catch (error) {
+    if (error instanceof AppError) {
+      return {
+        status: error.status,
+        success: false,
+        message: error.message,
+        data: null as unknown as LoginResponse,
+        errors: error.errors,
+        trace_id: '',
+      };
+    }
+    throw error;
+  }
 };

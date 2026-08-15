@@ -5,7 +5,7 @@ import { APP } from './libs/constants';
 import { getSession } from './libs/session';
 
 // 1. Specify public routes
-const publicRoutes = ['/login', '/forgot-password', '/verify-otp', '/new-password'];
+const publicRoutes = ['/login'];
 
 // This function can be marked `async` if using `await` inside
 export async function proxy(request: NextRequest) {
