@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Solutech E-Commerce API",
-    "description": "REST API untuk Solutech Technical Test - Backend Developer.\n\nSetup:\n1. Import collection ini ke Postman.\n2. Buat environment (atau set variable) dengan `baseUrl` = http://localhost:3000.\n3. Jalankan request `Auth > Login` terlebih dahulu. Token JWT otomatis tersimpan ke variable `token` melalui test script.\n4. Endpoint protected memakai Authorization: Bearer {{token}}.\n\nKredensial seed:\n- Admin: admin@solutech.dev / admin123\n- User: user@solutech.dev / user123",
+    "description": "REST API untuk Solutech Technical Test - Backend Developer.\n\nSetup:\n1. Import collection ini ke Postman.\n2. Buat environment (atau set variable) dengan `baseUrl` = http://localhost:3000.\n3. Jalankan request `Auth > Login` terlebih dahulu. Token JWT otomatis tersimpan ke variable `token` melalui test script.\n4. Endpoint protected memakai Authorization: Bearer {{token}}.\n\nKredensial seed:\n- Admin: admin@solutech.dev / admin123\n- User: user@solutech.dev / user123\n\nCatatan role:\n- Kedua role dapat login dan mengakses seluruh API (product & order). Order selalu di-filter per-user.\n- Halaman FE admin (management product) hanya untuk role ADMIN; user biasa melihat halaman Forbidden.\n\nRegister:\n- POST /api/auth/register - buat akun baru (role USER). Email duplikat -> 409.\n\nCaching:\n- GET /api/products memakai Redis cache (TTL 60s, invalidasi otomatis saat create/update/delete). Bila Redis tidak tersedia, API tetap berjalan (cache dilewati).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -18,6 +18,46 @@
     {
       "name": "Auth",
       "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Register success', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@solutech.dev\",\n  \"password\": \"newuser123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
         {
           "name": "Login",
           "event": [
@@ -53,8 +93,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         }
@@ -70,12 +116,65 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products?page=1&limit=10&search=kemeja",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "search", "value": "kemeja" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "kemeja"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Products (filter status + date)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=10&status=ACTIVE&startDate=2026-01-01&endDate=2026-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-12-31"
+                }
               ]
             }
           }
@@ -87,8 +186,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -125,12 +230,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Tas Pinggang Canvas\",\n  \"description\": \"Tas pinggang bahan canvas waterproof\",\n  \"price\": 175000,\n  \"stock\": 20\n}"
+              "raw": "{\n  \"name\": \"Tas Pinggang Canvas\",\n  \"description\": \"Tas pinggang bahan canvas waterproof\",\n  \"price\": 175000,\n  \"stock\": 20,\n  \"status\": \"ACTIVE\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/products",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
             }
           }
         },
@@ -146,12 +256,18 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"price\": 185000,\n  \"stock\": 25\n}"
+              "raw": "{\n  \"price\": 185000,\n  \"stock\": 25,\n  \"status\": \"INACTIVE\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/products/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -168,8 +284,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -214,8 +336,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
             }
           }
         },
@@ -226,11 +353,22 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/orders?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             }
           }
@@ -242,8 +380,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/orders/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
