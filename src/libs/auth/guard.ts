@@ -22,11 +22,7 @@ export const getAuthUser = async (): Promise<JwtPayload> => {
     throw AppError.unauthorized();
   }
 
-  try {
-    return await verifyJwt(token);
-  } catch {
-    throw AppError.unauthorized();
-  }
+  return verifyJwt(token);
 };
 
 export const requireAuth = getAuthUser;

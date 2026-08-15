@@ -1,6 +1,7 @@
 import { jwtVerify, SignJWT } from 'jose';
 
 import { ENV } from '@/libs/env';
+import { AppError } from '@/libs/utils';
 
 export type JwtPayload = {
   userId: string;
@@ -19,13 +20,20 @@ export const signJwt = async (payload: JwtPayload): Promise<string> => {
 };
 
 export const verifyJwt = async (token: string): Promise<JwtPayload> => {
-  const { payload } = await jwtVerify(token, secretKey);
+  let payload;
+
+  try {
+    ({ payload } = await jwtVerify(token, secretKey));
+  } catch {
+    throw AppError.unauthorized();
+  }
+
   const userId = payload.userId;
   const email = payload.email;
   const role = payload.role;
 
   if (!userId || !email || !role) {
-    throw new Error('Invalid token payload');
+    throw AppError.unauthorized();
   }
 
   return {

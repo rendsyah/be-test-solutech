@@ -8,7 +8,6 @@ import { ENV } from './env';
 export type SessionData = {
   token: string;
   redirectTo: string;
-  isLogin: boolean;
 };
 
 export const sessionOptions: SessionOptions = {

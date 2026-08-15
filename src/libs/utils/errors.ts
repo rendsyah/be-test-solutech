@@ -1,10 +1,12 @@
+import type { ApiError } from '@/types';
+
 import { HTTP_STATUS } from '../constants';
 
 export class AppError extends Error {
   constructor(
     public readonly status: number,
     message: string,
-    public readonly errors: string[] = [],
+    public readonly errors: ApiError[] = [],
   ) {
     super(message);
     this.name = 'AppError';
@@ -28,6 +30,10 @@ export class AppError extends Error {
 
   static conflict(message: string = 'Conflict') {
     return new AppError(HTTP_STATUS.CONFLICT, message);
+  }
+
+  static tooManyRequests(message: string = 'Too many requests') {
+    return new AppError(HTTP_STATUS.TOO_MANY_REQUESTS, message);
   }
 
   static internal(message: string = 'An unexpected error occurred') {
