@@ -30,5 +30,6 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm db:generate
       - run: pnpm lint
       - run: pnpm build
