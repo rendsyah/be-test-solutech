@@ -1,7 +1,8 @@
 import { AdminLayout } from '@/components/layouts';
 import { ResourceProvider } from '@/contexts';
-import { requireAuth } from '@/libs/auth';
-import { userRepository } from '@/modules/auth/repositories';
+import type { UserRole, UserStatus } from '@/generated/prisma/enums';
+import { requirePageAuth } from '@/libs/auth';
+import { userRepository } from '@/repositories';
 import type { Menus, User } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -28,42 +29,35 @@ const toResourceUser = (user: {
   id: string;
   name: string;
   email: string;
-  role?: string;
+  role: UserRole;
+  status: UserStatus;
+  last_login_at: string | null;
 }): User => ({
   id: user.id,
   name: user.name,
   email: user.email,
-  phone: '',
-  image: '',
   role: user.role,
-  created_at: '',
-  updated_at: '',
+  status: user.status,
+  image: '',
+  last_login_at: user.last_login_at,
 });
 
 export default async function AdminLayoutPage({ children }: { children: React.ReactNode }) {
-  let user: User;
+  const authUser = await requirePageAuth();
+  const dbUser = await userRepository.findById(authUser.userId);
 
-  try {
-    const authUser = await requireAuth();
-    const dbUser = await userRepository.findById(authUser.userId);
-    user = toResourceUser({
-      id: authUser.userId,
-      name: dbUser?.name ?? authUser.email,
-      email: dbUser?.email ?? authUser.email,
-      role: dbUser?.role ?? authUser.role,
-    });
-  } catch {
-    user = {
-      id: '',
-      name: 'Guest',
-      email: '',
-      phone: '',
-      image: '',
-      role: '',
-      created_at: '',
-      updated_at: '',
-    };
+  if (!dbUser) {
+    throw new Error(`User not found: ${authUser.userId}`);
   }
+
+  const user = toResourceUser({
+    id: dbUser.id,
+    name: dbUser.name,
+    email: dbUser.email,
+    role: dbUser.role,
+    status: dbUser.status,
+    last_login_at: dbUser.lastLoginAt?.toISOString() ?? null,
+  });
 
   return (
     <ResourceProvider user={user} menus={ADMIN_MENUS} permissions={[]}>

@@ -39,8 +39,7 @@ export const Sidebar: React.FC = () => {
     <aside className={sidebarClass} suppressHydrationWarning>
       <div className="flex justify-center items-center pt-10 pb-6 lg:py-8 shrink-0">
         <div className="flex items-center gap-4">
-          <Image src="/images/logo.svg" alt="Logo" width={48} height={48} priority />
-          <p className="text-xl font-semibold tracking-wider">NextJS</p>
+          <Image src="/images/logo.png" alt="Logo" width={133} height={80} priority />
         </div>
       </div>
 

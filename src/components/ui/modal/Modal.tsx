@@ -1,7 +1,5 @@
 'use client';
 
-import Image from 'next/image';
-
 import { XMarkIcon } from '@/components/icons';
 import { useBodyScrollLock } from '@/hooks';
 import { cn } from '@/libs/utils';
@@ -46,10 +44,7 @@ export const Modal: React.FC<ModalProps> = ({
         className={cn('relative card z-10 w-full max-w-xs overflow-hidden', SIZE_CLASSES[size])}
       >
         <div className="flex items-center border-b border-slate-200 px-6 py-4">
-          <Image src="/images/logo.svg" alt="Logo" width={24} height={24} />
-          {title && (
-            <h1 className="text-sm font-semibold uppercase tracking-wider ml-3">{title}</h1>
-          )}
+          {title && <h1 className="text-sm font-semibold">{title}</h1>}
           <IconButton onClick={onClose} className="ml-auto">
             <XMarkIcon className="h-6 w-6" />
           </IconButton>
